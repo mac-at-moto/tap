@@ -44,7 +44,17 @@
       </span>
       </h4>
       
-          <div id="comment" class="fullcommenttop"><div class="toggleContainer block">
+          <div id="comment" class="fullcommenttop"><div class="comment cmt"><p>Scale Spark mllib vectors using the standard normalization scaler.</p><h4>Input Json template</h4><pre>config = <span class="lit">""</span><span class="lit">"
+PowerTransform {
+   input0="</span>inputRddName<span class="lit">"
+   output0="</span>outputRddName<span class="lit">"
+}
+"</span><span class="lit">""</span></pre><p>To construct your own config, simply replace the values in the quotes above.</p><h4>Output Json format</h4><pre>result =
+{
+  input0=<span class="lit">"inputRddName"</span>
+  output0=<span class="lit">"outputRddName"</span>
+}</pre><p>To retrieve a value by key, simply use the key name.</p><p>E.g. the following code retrieves the name of the output RDD
+(assuming <code>resp</code> is the object name returned from the call to this module).</p><pre>resp[<span class="lit">'result'</span>]['output0<span class="lit">']</span></pre></div><div class="toggleContainer block">
           <span class="toggle">Linear Supertypes</span>
           <div class="superTypes hiddenContent"><span class="extype" name="spark.jobserver.NamedRddSupport">NamedRddSupport</span>, <span class="extype" name="spark.jobserver.SparkJob">SparkJob</span>, <span class="extype" name="scala.AnyRef">AnyRef</span>, <span class="extype" name="scala.Any">Any</span></div>
         </div></div>
