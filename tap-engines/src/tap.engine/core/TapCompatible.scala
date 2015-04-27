@@ -38,9 +38,13 @@ trait TapCompatible {
    * @return
    */
   def checkRequiredInputConfigKeys(config: Config): SparkJobValidation = {
-    val missingParams = (inputRddsKey ++ outputRddsKey ++ requiredInputConfigKeys).map(
-      para => Try(config.getString(withModuleNamePrefix(para))).map(x => None).getOrElse(Some(para))).flatten
-    if (missingParams.isEmpty) SparkJobValid else SparkJobInvalid("Missing required params: " + missingParams.mkString(","))
+    val missingParams = (inputRddsKey ++ outputRddsKey ++ requiredInputConfigKeys).flatMap(
+      para => Try(config.getString(withModuleNamePrefix(para))).map(x => None).getOrElse(Some(para)))
+    if (missingParams.isEmpty) {
+      SparkJobValid
+    } else {
+      SparkJobInvalid("Missing required params: " + missingParams.mkString(","))
+    }
   }
 
   def dryRun(namedRdd: NamedRdds, sc: SparkContext, config: Config): RDD[Any] = {
@@ -89,7 +93,8 @@ trait TapCompatible {
   def trueRun(sc: SparkContext, config: Config): Any
 
   def updateMockOutputRdd(mocked: Seq[Any], sc: SparkContext, config: Config): RDD[Any] =
-    namedRdds.update(MockRddPrefix + config.getString(withModuleNamePrefix(DefaultOutputRddKey)), sc.parallelize(mocked))
+    namedRdds.update(MockRddPrefix + config.getString(withModuleNamePrefix(DefaultOutputRddKey)),
+      sc.parallelize(mocked))
 
   // get paraName with moduleName prefix
   def withModuleNamePrefix(paraName: String): String =
