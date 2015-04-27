@@ -28,15 +28,12 @@ object TapConfig extends SparkJob with NamedRddSupport {
   }
 
   override def runJob(sc: SparkContext, config: Config): Any = {
-    val result = MM[String, String]()
     config.entrySet().foreach(kv => {
       val key = kv.getKey
       val value = kv.getValue.unwrapped().toString
       key match {
         case tapKey if tapKey.startsWith(ObjectName) => {
-          val property = key.split('.').tail.mkString(".")
-          tapConfig.put(property, value)
-          result.put(property, value)
+          tapConfig.put(key.split('.').tail.mkString("."), value)
         }
         case _ =>
       }
