@@ -41,7 +41,7 @@ object TapConfig extends SparkJob with NamedRddSupport {
         case _ =>
       }
     })
-    result
+    tapConfig.toMap
   }
 
   def isDryRun(): Boolean = tapConfig.get(DryRunKey).getOrElse("False").toBoolean
