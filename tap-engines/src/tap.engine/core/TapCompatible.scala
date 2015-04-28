@@ -47,39 +47,6 @@ trait TapCompatible {
     }
   }
 
-  def dryRun(namedRdd: NamedRdds, sc: SparkContext, config: Config): RDD[Any] = {
-    // if no need of upstream RDD
-    if (inputRddsKey == Nil) {
-      updateMockOutputRdd(generateMockData(Map()), sc, config)
-    }
-    else {
-      val upstreamMockedRdds = inputRddsKey.map(rddKey =>
-        rddKey -> {
-          val mockedRdd = namedRdd.get[Any](MockRddPrefix + config.getString(withModuleNamePrefix(rddKey)))
-          if (mockedRdd == None) None else mockedRdd.get
-        }).toMap
-      // any upstream mocked RDD is not available
-      val rdds = Seq(upstreamMockedRdds.values)
-      if (rdds.flatten.size < rdds.size) {
-        val upstreamRdds = inputRddsKey.map(rddKey =>
-          rddKey -> {
-            val rdd = namedRdd.get[Any](config.getString(withModuleNamePrefix(rddKey)))
-            if (rdd == None) None else rdd.get
-          }).toMap
-        // any upstream RDD is not available
-        val rdds = Seq(upstreamRdds.values)
-        if (rdds.flatten.size < rdds.size) {
-          throw new NoSuchElementException(
-            "for some upstream RDD neither itself nor its mock data is available.")
-        } else {
-          updateMockOutputRdd(generateMockData(upstreamRdds), sc, config)
-        }
-      } else {
-        updateMockOutputRdd(generateMockData(upstreamMockedRdds), sc, config)
-      }
-    }
-  }
-
   /**
    * Generates mock data.
    * @param upstreamInputMap: input data map (Name: Data) from upstream RDDs or mocked RDDs
@@ -87,8 +54,43 @@ trait TapCompatible {
    */
   def generateMockData(upstreamInputMap: Map[String, Any]): Seq[Any]
 
-  def run(namedRdd: NamedRdds, sc: SparkContext, config: Config): Any =
-    if (isDryRun()) dryRun(namedRdds, sc, config) else trueRun(sc, config)
+  def run(namedRdd: NamedRdds, sc: SparkContext, config: Config): Any = {
+
+    def dryRun(): RDD[Any] = {
+      // if no need of upstream RDD
+      if (inputRddsKey == Nil) {
+        updateMockOutputRdd(generateMockData(Map()), sc, config)
+      }
+      else {
+        val upstreamMockedRdds = inputRddsKey.map(rddKey =>
+          rddKey -> {
+            val mockedRdd = namedRdd.get[Any](MockRddPrefix + config.getString(withModuleNamePrefix(rddKey)))
+            if (mockedRdd == None) None else mockedRdd.get
+          }).toMap
+        // any upstream mocked RDD is not available
+        val rdds = Seq(upstreamMockedRdds.values)
+        if (rdds.flatten.size < rdds.size) {
+          val upstreamRdds = inputRddsKey.map(rddKey =>
+            rddKey -> {
+              val rdd = namedRdd.get[Any](config.getString(withModuleNamePrefix(rddKey)))
+              if (rdd == None) None else rdd.get
+            }).toMap
+          // any upstream RDD is not available
+          val rdds = Seq(upstreamRdds.values)
+          if (rdds.flatten.size < rdds.size) {
+            throw new NoSuchElementException(
+              "for some upstream RDD neither itself nor its mock data is available.")
+          } else {
+            updateMockOutputRdd(generateMockData(upstreamRdds), sc, config)
+          }
+        } else {
+          updateMockOutputRdd(generateMockData(upstreamMockedRdds), sc, config)
+        }
+      }
+    }
+
+    if (isDryRun()) dryRun() else trueRun(sc, config)
+  }
 
   def trueRun(sc: SparkContext, config: Config): Any
 
