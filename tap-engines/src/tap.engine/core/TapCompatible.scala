@@ -17,20 +17,21 @@ trait TapCompatible {
   val DefaultOutputRddKey = "output0"
   val MockRddPrefix = "__"
 
-  /** All input RDDs' key. */
-  val inputRddsKey: Seq[String]
   /** Module name. */
   val moduleName = getClass.getSimpleName.split('$').head
+
+  /** All input RDDs' key. */
+  def inputRddsKey: Seq[String]
   /** Required module input parameters (excluding input and output Rdd names). */
-  val requiredInputConfigKeys: Seq[String]
+  def requiredInputConfigKeys: Seq[String]
   /** Required module output result keys. */
-  val requiredOutputResultKeys: Seq[String]
+  def requiredOutputResultKeys: Seq[String]
   /** Optional module input parameters. */
-  val optionalInputConfigKeys: Seq[String] = Nil
+  def optionalInputConfigKeys: Seq[String] = Nil
   /** Optional module output result keys. */
-  val optionalOutputResultKeys: Seq[String] = Nil
+  def optionalOutputResultKeys: Seq[String] = Nil
   /** All output RDDs' key. */
-  val outputRddsKey: Seq[String]
+  def outputRddsKey: Seq[String]
 
   /**
    * Check if all required parameters are included in the config.
@@ -40,11 +41,8 @@ trait TapCompatible {
   def checkRequiredInputConfigKeys(config: Config): SparkJobValidation = {
     val missingParams = (inputRddsKey ++ outputRddsKey ++ requiredInputConfigKeys).flatMap(
       para => Try(config.getString(withModuleNamePrefix(para))).map(x => None).getOrElse(Some(para)))
-    if (missingParams.isEmpty) {
-      SparkJobValid
-    } else {
-      SparkJobInvalid("Missing required params: " + missingParams.mkString(","))
-    }
+    if (missingParams.isEmpty) SparkJobValid
+    else SparkJobInvalid("Missing required params: " + missingParams.mkString(","))
   }
 
   /**
