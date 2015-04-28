@@ -9,15 +9,15 @@ import tap.engine.core.TapCompatible
 
 object TakeSample extends SparkJob with NamedRddSupport with TapCompatible {
 
-  override val inputRddsKey = Seq(DefaultInputRddKey)
-  override val outputRddsKey = Nil
+  override def inputRddsKey: Seq[String] = Seq(DefaultInputRddKey)
+  override def outputRddsKey: Seq[String] = Nil
 
   val iCount = "count"
   val iSeed = "seed"
-  override val requiredInputConfigKeys = Seq(iCount, iSeed)
+  override def requiredInputConfigKeys: Seq[String] = Seq(iCount, iSeed)
 
   val oData = "data"
-  override val requiredOutputResultKeys = Seq(oData)
+  override def requiredOutputResultKeys: Seq[String] = Seq(oData)
 
   override def validate(sc: SparkContext, config: Config): SparkJobValidation = {
     checkRequiredInputConfigKeys(config)

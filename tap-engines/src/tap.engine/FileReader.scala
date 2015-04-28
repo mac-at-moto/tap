@@ -46,17 +46,17 @@ import tap.engine.core.TapCompatible
 
 object FileReader extends SparkJob with TapCompatible with NamedRddSupport {
 
-  override val inputRddsKey = Nil
-  override val outputRddsKey = Seq(DefaultOutputRddKey)
+  override def inputRddsKey: Seq[String] = Nil
+  override def outputRddsKey: Seq[String] = Seq(DefaultOutputRddKey)
 
   val iInputFile = "inputFile"
   val iFormat = "format"
-  override val requiredInputConfigKeys = Seq(iFormat, iInputFile)
+  override def requiredInputConfigKeys: Seq[String] = Seq(iFormat, iInputFile)
 
   val iDelimiter = "delimiter"
-  override val optionalInputConfigKeys = Seq(iDelimiter, iFormat)
+  override def optionalInputConfigKeys: Seq[String] = Seq(iDelimiter, iFormat)
 
-  override val requiredOutputResultKeys = Seq(DefaultInputRddKey, DefaultOutputRddKey)
+  override def requiredOutputResultKeys: Seq[String] = Seq(DefaultInputRddKey, DefaultOutputRddKey)
 
   override def validate(sc: SparkContext, config: Config): SparkJobValidation = {
     checkRequiredInputConfigKeys(config)
