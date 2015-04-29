@@ -41,7 +41,7 @@
  <check level="warning" class="org.scalastyle.scalariform.EqualsHashCodeChecker" enabled="true"></check>
  <check level="warning" class="org.scalastyle.scalariform.IllegalImportsChecker" enabled="true">
   <parameters>
-   <parameter name="illegalImports"><![CDATA[sun._,java.awt._,collection.JavaConversions._,scala.collection.JavaConversions._]]></parameter>
+   <parameter name="illegalImports"><![CDATA[sun._,java.awt._]]></parameter>
   </parameters>
  </check>
  <check level="warning" class="org.scalastyle.scalariform.ParameterNumberChecker" enabled="true">
@@ -79,7 +79,7 @@
  </check>
  <check level="warning" class="org.scalastyle.scalariform.UppercaseLChecker" enabled="true"></check>
  <check level="warning" class="org.scalastyle.scalariform.SimplifyBooleanExpressionChecker" enabled="true"></check>
- <check level="warning" class="org.scalastyle.scalariform.IfBraceChecker" enabled="true">
+ <check level="warning" class="org.scalastyle.scalariform.IfBraceChecker" enabled="false">
   <parameters>
    <parameter name="singleLineAllowed"><![CDATA[true]]></parameter>
    <parameter name="doubleLineAllowed"><![CDATA[false]]></parameter>

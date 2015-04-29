@@ -1,17 +1,14 @@
 package tap.engine
 
+import java.io.{FileOutputStream, ObjectOutputStream}
+
 import com.typesafe.config.{Config, ConfigFactory}
-import org.apache.spark._
 import org.apache.spark.SparkContext._
+import org.apache.spark._
 import org.apache.spark.mllib.clustering.KMeans
-import org.apache.spark.mllib.linalg.Vectors
-import scala.util.Try
-import spray.json._
-import spray.json.DefaultJsonProtocol._
 import spark.jobserver._
 
-import java.io.{ObjectOutputStream, ObjectInputStream}
-import java.io.{FileOutputStream, FileInputStream}
+import scala.util.Try
 
 object ClusterAnalysis extends SparkJob with NamedRddSupport {
 
@@ -61,7 +58,6 @@ object ClusterAnalysis extends SparkJob with NamedRddSupport {
       val WSSSE = model.computeCost(parsedData)
       result = result + ("WSSSE" -> WSSSE)
     }
-    
     result
   }
 }

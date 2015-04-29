@@ -6,10 +6,8 @@ import org.apache.spark.mllib.linalg.Vectors
 import org.apache.spark.mllib.recommendation.Rating
 import org.apache.spark.mllib.util.MLUtils
 import spark.jobserver._
+import tap.engine.core.TapCompatible
 
-import TapUtil._
-
-import scala.util.Try
 /**
  * Load input data from storage sources, such as Google CloudStorage.
  *
@@ -46,23 +44,22 @@ import scala.util.Try
  * }}}
  */
 
-object FileReader extends SparkJob with NamedRddSupport {
+object FileReader extends SparkJob with TapCompatible with NamedRddSupport {
 
-  val ObjectName = this.getClass.getSimpleName.split('$').head
+  override def inputRddsKey: Seq[String] = Nil
+  override def outputRddsKey: Seq[String] = Seq(DefaultOutputRddKey)
 
-  val DelimiterKeyPath = ObjectName + ".delimiter"
-  val InputFileKeyName = "inputFile"
-  val InputFileKeyPath = ObjectName + "." + InputFileKeyName
-  val InputFileFormatKeyPath = ObjectName + ".format"
-  val OutputRddNameKeyPath = ObjectName + "." + OutputRddKey
+  val iInputFile = "inputFile"
+  val iFormat = "format"
+  override def requiredInputConfigKeys: Seq[String] = Seq(iFormat, iInputFile)
+
+  val iDelimiter = "delimiter"
+  override def optionalInputConfigKeys: Seq[String] = Seq(iDelimiter, iFormat)
+
+  override def requiredOutputResultKeys: Seq[String] = Seq(DefaultInputRddKey, DefaultOutputRddKey)
 
   override def validate(sc: SparkContext, config: Config): SparkJobValidation = {
-    Try(config.getString(InputFileKeyPath))
-      .map(x => SparkJobValid)
-      .getOrElse(SparkJobInvalid("No" + InputFileKeyPath + "config param"))
-    Try(config.getString(OutputRddNameKeyPath))
-      .map(x => SparkJobValid)
-      .getOrElse(SparkJobInvalid("No" + OutputRddNameKeyPath + "config param"))
+    checkRequiredInputConfigKeys(config)
   }
 
   /**
@@ -71,32 +68,32 @@ object FileReader extends SparkJob with NamedRddSupport {
    * @return json object provides output parameters
    */
   override def runJob(sc: SparkContext, config: Config): Any = {
-    // Load and parse the data
-    val delimiter = config.getString(DelimiterKeyPath)
-    val format = config.getString(InputFileFormatKeyPath)
-    val inputFilePath = config.getString(InputFileKeyPath)
-    val output0Name = config.getString(OutputRddNameKeyPath)
-
-    if (isDryRun(sc)) {
-      namedRdds.update(DryRunRddPrefix + output0Name, format match {
-        case _ => sc.parallelize(Seq(Vectors.dense(1, 2, 3)))
-      })
-    } else {
-      namedRdds.update(output0Name, format match {
-        case "libSVM" => MLUtils.loadLibSVMFile(sc, inputFilePath)
-        case "rating" => sc.textFile(inputFilePath).
-          map(_.split(',') match {
-          case Array(user, item, rate) => Rating(user.toInt, item.toInt, rate.toDouble)
-        })
-        case _ => sc.textFile(inputFilePath).
-          map(s => Vectors.dense(s.split(delimiter).map(_.toDouble)))
-      })
-    }
-
+    run(namedRdds, sc, config)
     val result = Map(
-      InputFileKeyName -> inputFilePath,
-      OutputRddKey -> output0Name
+      DefaultInputRddKey -> config.getString(withModuleNamePrefix(iInputFile)),
+      DefaultOutputRddKey -> config.getString(withModuleNamePrefix(DefaultOutputRddKey))
     )
     result
+  }
+
+  override def generateMockData(upstreamInputMap: Map[String, Any]): Seq[Any] =
+    Seq(Vectors.dense(1, 2, 3), Vectors.dense(4, 5, 6), Vectors.dense(7, 8, 9))
+
+  override def trueRun(sc: SparkContext, config: Config): Any = {
+    val format = config.getString(withModuleNamePrefix(iFormat))
+    val inputFilePath = config.getString(withModuleNamePrefix(iInputFile))
+    val output0Name = config.getString(withModuleNamePrefix(DefaultOutputRddKey))
+    namedRdds.update(output0Name, format match {
+      case "libSVM" => MLUtils.loadLibSVMFile(sc, inputFilePath)
+      case "rating" => sc.textFile(inputFilePath).
+        map(_.split(',') match {
+        case Array(user, item, rate) => Rating(user.toInt, item.toInt, rate.toDouble)
+      })
+      case _ => {
+        val delimiter = config.getString(withModuleNamePrefix(iDelimiter))
+        sc.textFile(inputFilePath).
+          map(s => Vectors.dense(s.split(delimiter).map(_.toDouble)))
+      }
+    })
   }
 }
